@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 17:05:30 +0800
+Subject: [PATCH] Update Leaves
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+index 03fb4299d43bf7b3c0dcc89fce5a2234f89d8e3f..c4ab487cefd040eee2c41d84c1cde89df28fcb87 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+@@ -486,7 +486,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
+ 
+     @Override
+     public com.destroystokyo.paper.util.VersionFetcher getVersionFetcher() {
+-        return new org.leavesmc.leaves.util.LeavesVersionFetcher(); // Leaves - Leaves version fetcher
++        return new com.fandmc.fand.util.FandVersionFetcher(); // Leaves - Leaves version fetcher -> Fand version fetcher
+     }
+ 
+     @Override

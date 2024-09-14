@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 16:56:52 +0800
+Subject: [PATCH] Update Fand
+
+
+diff --git a/src/main/java/com/fandmc/fand/command/FandCommandBase.java b/src/main/java/com/fandmc/fand/command/FandCommandBase.java
+index 902a3b3591f55cf1f7a15dc7f81a75b37cf5cd21..cf0803c12b9b219101e1698034911033a194b561 100644
+--- a/src/main/java/com/fandmc/fand/command/FandCommandBase.java
++++ b/src/main/java/com/fandmc/fand/command/FandCommandBase.java
+@@ -55,7 +55,6 @@ public class FandCommandBase {
+                 Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
+                 if (knownCommands != null) {
+                     knownCommands.remove(commandName); // 从命令列表中移除命令
+-                    System.out.println("Command '" + commandName + "' has been unregistered.");
+                 } else {
+                     System.out.println("Known commands map is null.");
+                 }

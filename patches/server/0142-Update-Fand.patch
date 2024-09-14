@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 16:58:57 +0800
+Subject: [PATCH] Update Fand
+
+
+diff --git a/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java b/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java
+index cf1f4112b7f76cb202fbd76345b06d283771b73c..e0c1ecaf56dc88d1368958c7d7aa8ec67d75a682 100644
+--- a/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java
++++ b/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java
+@@ -102,6 +102,6 @@ public class TicksPerSecondBarCommand extends Command {
+         }
+ 
+         // 更新 Boss Bar 的标题
+-        tpsBossBar.setTitle("Current TPS: " + String.format("%.2f", currentTps));
++        tpsBossBar.setTitle("TPS: " + String.format("%.2f", currentTps));
+     }
+ }
+diff --git a/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java b/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java
+index 508077d70fe1f53b84d7c085b20eaa32c89ac355..fdd3180755d120c4c520ee69a308637fba976f77 100644
+--- a/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java
++++ b/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java
+@@ -43,7 +43,7 @@ public class TicksPerSecondCommand extends Command {
+         if (sender.hasPermission("fand.command.tpsmemory")) {
+             sender.sendMessage(Component.text()
+                 .append(Component.text("memory use: ", TextColor.color(0x55C3FF))) // 蓝色主题
+-                .append(Component.text((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024) + "/" + (Runtime.getRuntime().totalMemory() / (1024 * 1024)) + " MB (最大: " + (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + " MB)", NamedTextColor.GREEN))
++                .append(Component.text((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024) + "/" + (Runtime.getRuntime().totalMemory() / (1024 * 1024)) + " MB (max: " + (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + " MB)", NamedTextColor.GREEN))
+             );
+ 
+             if (!hasShownMemoryWarning) {
