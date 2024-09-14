@@ -54,9 +54,3 @@ dependencies {
 ## 对于想要出一份力的开发者
 
 可查看 [贡献须知](docs/CONTRIBUTING_cn.md)
-
-## 特别感谢
-
-[<img src="https://user-images.githubusercontent.com/21148213/121807008-8ffc6700-cc52-11eb-96a7-2f6f260f8fda.png" alt="" width="150">](https://www.jetbrains.com)
-
-[JetBrains](https://www.jetbrains.com/)，IntelliJ IDEA 的创造者，为 Fand 提供了 [开源许可证](https://www.jetbrains.com/opensource/)。我们极力推荐使用 IntelliJ IDEA 作为你的 IDE。
