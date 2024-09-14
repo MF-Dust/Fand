@@ -3,7 +3,7 @@ Fand
 
 [![Fand CI](https://github.com/FandMC/Fand/actions/workflows/build.yml/badge.svg)](https://github.com/FandMC/Fand/actions/workflows/Fand.yml)
 [![Fand Download](https://img.shields.io/github/downloads/FandMC/Fand/total?color=0&logo=github)](https://github.com/FandMC/Fand/releases/latest)
-[![QQ](https://img.shields.io/badge/QQ_Unofficial-815857713-blue)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=cgotyELe3jab6rKnUM5DuWWiaNakOIzZ&authKey=L8yT48eCSzqdtJZtE2%2F7qK8G3xnqs2O5u8zAOu56YLqSLccSo%2FOcjSGkXT8GjkQ1&noverify=0&group_code=495796642)
+[![QQ](https://img.shields.io/badge/QQ_Unofficial-815857713-blue)](点击链接加入群聊【FandMC】：http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=xtbdv2YNvP3kuqXq1e5dMkkfXE1s12ZX&authKey=vUpDm9nSulxaty%2BS9jOfl8QJcGL1WQ16ZCsXRZEhzzxe2oWDWNIZy4do8MKu31cl&noverify=0&group_code=495796642)
 
 **English** | [中文](README_cn.md)
 
