@@ -1,0 +1,64 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sun, 15 Sep 2024 07:55:47 +0800
+Subject: [PATCH] Update URL
+
+
+diff --git a/src/main/java/com/fandmc/fand/util/FandVersionFetcher.java b/src/main/java/com/fandmc/fand/util/FandVersionFetcher.java
+index 70d085d1c2761cef852feb4ad3d5d70896486442..14dc57f1d5fb631897787a877a6294e1e48760db 100644
+--- a/src/main/java/com/fandmc/fand/util/FandVersionFetcher.java
++++ b/src/main/java/com/fandmc/fand/util/FandVersionFetcher.java
+@@ -33,7 +33,8 @@ public class FandVersionFetcher extends PaperVersionFetcher {
+ 
+     private static final int DISTANCE_ERROR = -1;
+     private static final int DISTANCE_UNKNOWN = -2;
+-    private static final String DOWNLOAD_PAGE = "https://fandmc.top/downloads/fand";
++    private static final String DOWNLOAD_PAGE = "https://fandmc.cn/downloads/Fand";
++    private static final String URL = "https://api.fandmc.cn/v2/projects/leaves/versions/";
+ 
+     @NotNull
+     @Override
+@@ -88,7 +89,7 @@ public class FandVersionFetcher extends PaperVersionFetcher {
+ 
+         try {
+             try (final BufferedReader reader = Resources.asCharSource(
+-                URI.create("https://api.fandmc.top/v2/projects/leaves/versions/" + build.minecraftVersionId()).toURL(),
++                URI.create(URL + build.minecraftVersionId()).toURL(),
+                 Charsets.UTF_8
+             ).openBufferedStream()) {
+                 final JsonObject json = new Gson().fromJson(reader, JsonObject.class);
+@@ -115,7 +116,7 @@ public class FandVersionFetcher extends PaperVersionFetcher {
+ 
+         try {
+             try (BufferedReader reader = Resources.asCharSource(
+-                URI.create("https://api.fandmc.top/v2/projects/leaves/versions/" + build.minecraftVersionId() + "/differ/" + build.gitCommit().get()).toURL(),
++                URI.create(URL + build.minecraftVersionId() + "/differ/" + build.gitCommit().get()).toURL(),
+                 Charsets.UTF_8
+             ).openBufferedStream()) {
+                 return Integer.parseInt(reader.readLine());
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 76ecd0f28a23f3f3fea6d6982f02bdd8d4ac6eda..2a3730de4633ced9e2ff10594dd4cb9c3e2e43da 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -1243,7 +1243,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+                 LOGGER.info("*************************************************************************************");
+                 LOGGER.info("This is the first time you're starting this server.");
+                 LOGGER.info("It's recommended you read our 'Getting Started' documentation for guidance.");
+-                LOGGER.info("View this and more helpful information here: https://docs.fandmc.top"); // Leaves - change
++                LOGGER.info("View this and more helpful information here: https://docs.fandmc.cn"); // Leaves - change
+                 LOGGER.info("*************************************************************************************");
+             }
+             // Paper end - Add onboarding message for initial server start
+diff --git a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+index a8d0fc6bd70712bb787691cecc0d9a8a7be88583..e319e229c97a8ad46aea659b678ce260b9d0e8c6 100644
+--- a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
++++ b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+@@ -118,7 +118,7 @@ public class MinecraftServerGui extends JComponent {
+ 
+     // Paper start - Add onboarding message for initial server start
+     private JComponent buildOnboardingPanel() {
+-        String onboardingLink = "https://docs.fandmc.top"; // Leaves - change
++        String onboardingLink = "https://docs.fandmc.cn"; // Leaves - change
+         JPanel jPanel = new JPanel();
+ 
+         javax.swing.JLabel jLabel = new javax.swing.JLabel("If you need help setting up your server you can visit:");
