@@ -1,0 +1,312 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 16:50:29 +0800
+Subject: [PATCH] Update Leaves
+
+
+diff --git a/src/main/java/com/fandmc/fand/FandConfig.java b/src/main/java/com/fandmc/fand/FandConfig.java
+index 947317c90ab7bf09e8818e46ac786f9e0483b90b..32cd98d0fcf12c29d08ff40f167be5672999016c 100644
+--- a/src/main/java/com/fandmc/fand/FandConfig.java
++++ b/src/main/java/com/fandmc/fand/FandConfig.java
+@@ -3,4 +3,8 @@ package com.fandmc.fand;
+ public class FandConfig {
+     @GlobalConfig(name = "server-mod-name", category = "misc", verify = ConfigVerifyImpl.StringConfigVerify.class)
+     public static String serverModName = "Fand";
++    public static void init() {
++        com.fandmc.fand.command.FandCommandBase.registerCommands();
++    }
++
+ }
+diff --git a/src/main/java/com/fandmc/fand/command/FandCommandBase.java b/src/main/java/com/fandmc/fand/command/FandCommandBase.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..902a3b3591f55cf1f7a15dc7f81a75b37cf5cd21
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/command/FandCommandBase.java
+@@ -0,0 +1,79 @@
++package com.fandmc.fand.command;
++
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.Bukkit;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandMap;
++import org.bukkit.command.SimpleCommandMap;
++
++import java.lang.reflect.Field;
++import java.util.HashMap;
++import java.util.Map;
++
++public class FandCommandBase {
++    static Map<String, Command> commands = new HashMap<>();
++    public static void registerCommands() {  // 传递插件实例
++        try {
++            // 获取 CommandMap 对象
++            CommandMap commandMap = getCommandMap();
++
++            if (commandMap == null) {
++                System.out.println("CommandMap not found!");
++                return;
++            }
++
++            // 取消注册默认的 tps 命令
++            unregisterCommand(commandMap, "tps");
++
++            // 注册自定义的 tps 命令
++            TicksPerSecondCommand tpsCommand = new TicksPerSecondCommand("tps");
++            commandMap.register("tps", "Fand", tpsCommand); // 覆盖默认 tps 命令
++            commands.put("tps", tpsCommand);
++
++            // 注册 tpsbar 命令，并传递插件实例
++            TicksPerSecondBarCommand tpsBarCommand = new TicksPerSecondBarCommand("tpsbar", MinecraftServer.getServer());
++            commandMap.register("tpsbar", "Fand", tpsBarCommand); // 注册 tpsbar 命令
++            commands.put("tpsbar", tpsBarCommand);
++
++            // 注册其他命令
++            for (Map.Entry<String, Command> entry : commands.entrySet()) {
++                commandMap.register(entry.getKey(), "Fand", entry.getValue());
++            }
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++    }
++
++    // 使用反射取消注册命令
++    private static void unregisterCommand(CommandMap commandMap, String commandName) {
++        if (commandMap instanceof SimpleCommandMap) {
++            try {
++                Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
++                knownCommandsField.setAccessible(true);
++
++                @SuppressWarnings("unchecked")
++                Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
++                if (knownCommands != null) {
++                    knownCommands.remove(commandName); // 从命令列表中移除命令
++                    System.out.println("Command '" + commandName + "' has been unregistered.");
++                } else {
++                    System.out.println("Known commands map is null.");
++                }
++            } catch (NoSuchFieldException | IllegalAccessException e) {
++                e.printStackTrace();
++            }
++        }
++    }
++
++    // 获取 CommandMap 对象
++    private static CommandMap getCommandMap() {
++        try {
++            Field commandMapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");
++            commandMapField.setAccessible(true);
++            return (CommandMap) commandMapField.get(Bukkit.getServer());
++        } catch (NoSuchFieldException | IllegalAccessException e) {
++            e.printStackTrace();
++            return null;
++        }
++    }
++}
+diff --git a/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java b/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..cf1f4112b7f76cb202fbd76345b06d283771b73c
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/command/TicksPerSecondBarCommand.java
+@@ -0,0 +1,107 @@
++package com.fandmc.fand.command;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.NamedTextColor;
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.Bukkit;
++import org.bukkit.boss.BarColor;
++import org.bukkit.boss.BarStyle;
++import org.bukkit.boss.BossBar;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++
++import java.util.Timer;
++import java.util.TimerTask;
++
++public class TicksPerSecondBarCommand extends Command {
++
++    private BossBar tpsBossBar; // Boss Bar 用于显示TPS
++    private final MinecraftServer server; // Minecraft Server 实例
++    private Timer timer;
++
++    public TicksPerSecondBarCommand(String name, MinecraftServer server) {
++        super(name);
++        this.server = server;
++        this.description = "Display the TPS of the server in the BOSS column";
++        this.usageMessage = "/tpsbar";
++        this.setPermission("fand.command.tpsbar");
++        // 初始化 Boss Bar
++        tpsBossBar = Bukkit.createBossBar("TPS", BarColor.GREEN, BarStyle.SOLID);
++    }
++
++    @Override
++    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
++        // 如果有参数，报错并拒绝执行
++        if (args.length > 0) {
++            sender.sendMessage(Component.text("This command does not accept parameters!", NamedTextColor.RED));
++            return false;
++        }
++
++        // 检查权限
++        if (!this.testPermission(sender)) {
++            sender.sendMessage(Component.text("You don't have permission to use this command.", NamedTextColor.RED));
++            return true;
++        }
++
++        // 检查是否是玩家
++        if (sender instanceof Player) {
++            Player player = (Player) sender;
++
++            // 如果玩家已在 Boss Bar 中，不要重复添加
++            if (!tpsBossBar.getPlayers().contains(player)) {
++                tpsBossBar.addPlayer(player);
++            }
++
++            // 启动定时任务，每 0.2 秒更新一次 TPS Bar
++            startTpsUpdateTask(player);
++
++            sender.sendMessage(Component.text("TPS bar has been displayed.", NamedTextColor.GREEN));
++        } else {
++            sender.sendMessage(Component.text("This command can only be used by players!", NamedTextColor.RED));
++        }
++
++        return true;
++    }
++
++    private void startTpsUpdateTask(Player player) {
++        if (timer != null) {
++            timer.cancel();
++        }
++
++        timer = new Timer();
++        timer.scheduleAtFixedRate(new TimerTask() {
++            @Override
++            public void run() {
++                if (!player.isOnline()) {
++                    tpsBossBar.removePlayer(player);
++                    timer.cancel();
++                    return;
++                }
++                updateTpsBar();
++            }
++        }, 0, 200); // 每 200 毫秒（即 0.2 秒）运行一次
++    }
++
++    // 更新TPS显示状态
++    private void updateTpsBar() {
++        double[] tps = Bukkit.getTPS();
++        double currentTps = tps[0]; // 获取 1 分钟内的平均 TPS
++
++        // 设置进度 (进度范围为 0.0 到 1.0)
++        double progress = Math.min(currentTps / 20.0, 1.0);
++        tpsBossBar.setProgress(progress);
++
++        // 根据 TPS 设置不同的颜色
++        if (currentTps > 18) {
++            tpsBossBar.setColor(BarColor.GREEN); // 高TPS，绿色
++        } else if (currentTps > 16) {
++            tpsBossBar.setColor(BarColor.YELLOW); // 中等TPS，黄色
++        } else {
++            tpsBossBar.setColor(BarColor.RED); // 低TPS，红色
++        }
++
++        // 更新 Boss Bar 的标题
++        tpsBossBar.setTitle("Current TPS: " + String.format("%.2f", currentTps));
++    }
++}
+diff --git a/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java b/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..508077d70fe1f53b84d7c085b20eaa32c89ac355
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/command/TicksPerSecondCommand.java
+@@ -0,0 +1,63 @@
++package com.fandmc.fand.command;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.NamedTextColor;
++import net.kyori.adventure.text.format.TextColor;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++
++public class TicksPerSecondCommand extends Command {
++
++    public TicksPerSecondCommand(String name) {
++        super(name);
++        this.description = "Gets the current ticks per second for the server (TPS)";
++        this.usageMessage = "/tps";
++        this.setPermission("fand.command.tps");
++    }
++
++    private static final Component WARN_MSG = Component.text()
++        .build();
++
++    private boolean hasShownMemoryWarning;
++
++    @Override
++    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
++        // 如果有参数，报错并拒绝执行
++        if (args.length > 0) {
++            sender.sendMessage(Component.text("This command does not accept parameters!", NamedTextColor.RED));
++            return false; // 返回 false 表示命令输入不正确
++        }
++
++        if (!this.testPermission(sender)) return true;
++
++        double[] tps = org.bukkit.Bukkit.getTPS();
++        Component tpsMessage = Component.text("1m , 5m , 15m: ", TextColor.color(0x55C3FF)); // 蓝色主题
++
++        for (double tpsValue : tps) {
++            tpsMessage = tpsMessage.append(Component.space()).append(format(tpsValue));
++        }
++
++        sender.sendMessage(tpsMessage);
++
++        // 如果有权限，显示内存使用情况
++        if (sender.hasPermission("fand.command.tpsmemory")) {
++            sender.sendMessage(Component.text()
++                .append(Component.text("memory use: ", TextColor.color(0x55C3FF))) // 蓝色主题
++                .append(Component.text((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024) + "/" + (Runtime.getRuntime().totalMemory() / (1024 * 1024)) + " MB (最大: " + (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + " MB)", NamedTextColor.GREEN))
++            );
++
++            if (!hasShownMemoryWarning) {
++                sender.sendMessage(WARN_MSG);
++                hasShownMemoryWarning = true;
++            }
++        }
++
++        return true;
++    }
++
++    private static Component format(double tps) {
++        TextColor color = tps > 18.0 ? NamedTextColor.GREEN : (tps > 16.0 ? NamedTextColor.YELLOW : NamedTextColor.RED);
++        String amount = Math.min(Math.round(tps * 100.0) / 100.0, 20.0) + (tps > 21.0 ? "*" : "");
++        return Component.text(amount, color);
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 18f053785df042c41f88341bb3c0f647beb52ebe..b9874522aef6ecb7562607de24a74207dcaa4d2c 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -221,6 +221,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         org.spigotmc.SpigotConfig.registerCommands();
+         // Spigot end
+         io.papermc.paper.util.ObfHelper.INSTANCE.getClass(); // Paper - load mappings for stacktrace deobf and etc.
++        // Fand start - FandCommandRegister
++        com.fandmc.fand.FandConfig.init();
++        // Fand end - FandCommandRegister
+         // Paper start - initialize global and world-defaults configuration
+         this.paperConfigurations.initializeGlobalConfiguration(this.registryAccess());
+         this.paperConfigurations.initializeWorldDefaultsConfiguration(this.registryAccess());
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 54f4e67dcc51fbf2fb4c6471682d9b032bd7cfbe..405da87852c6124f2ef00bd3b7d0a3c7f2ff6153 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1103,6 +1103,7 @@ public final class CraftServer implements Server {
+         }
+         // Paper end
+         org.leavesmc.leaves.LeavesConfig.init((File) console.options.valueOf("leaves-settings")); // Leaves - Server Config
++        com.fandmc.fand.FandConfig.init(); // Fand - ServerCommand
+         this.reloadData();
+         org.spigotmc.SpigotConfig.registerCommands(); // Spigot
+         io.papermc.paper.command.PaperCommands.registerCommands(this.console); // Paper
