@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 14:55:28 +0800
+Subject: [PATCH] Update Leaves
+
+
+diff --git a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+index 3952428c02fe87477f4139f4fa98381500b7e076..a8d0fc6bd70712bb787691cecc0d9a8a7be88583 100644
+--- a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
++++ b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+@@ -118,7 +118,7 @@ public class MinecraftServerGui extends JComponent {
+ 
+     // Paper start - Add onboarding message for initial server start
+     private JComponent buildOnboardingPanel() {
+-        String onboardingLink = "https://docs.leavesmc.org/leaves/guides/next-steps"; // Leaves - change
++        String onboardingLink = "https://docs.fandmc.top"; // Leaves - change
+         JPanel jPanel = new JPanel();
+ 
+         javax.swing.JLabel jLabel = new javax.swing.JLabel("If you need help setting up your server you can visit:");

@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 14:57:37 +0800
+Subject: [PATCH] Update Leaves
+
+
+diff --git a/src/main/java/io/papermc/paper/PaperBootstrap.java b/src/main/java/io/papermc/paper/PaperBootstrap.java
+index d543b1b107ab8d3eeb1fc3c1cadf489928d2786e..ea42cc20d3676f25bd14bea81967de0a612dc645 100644
+--- a/src/main/java/io/papermc/paper/PaperBootstrap.java
++++ b/src/main/java/io/papermc/paper/PaperBootstrap.java
+@@ -6,7 +6,7 @@ import net.minecraft.SharedConstants;
+ import net.minecraft.server.Main;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+-
++import com.fandmc.fand.FandConfig;
+ public final class PaperBootstrap {
+     private static final Logger LOGGER = LoggerFactory.getLogger("bootstrap");
+ 
+@@ -46,7 +46,7 @@ public final class PaperBootstrap {
+             ),
+             String.format(
+                 "Loading %s %s for Minecraft %s",
+-                bi.brandName(),
++                FandConfig.serverModName,
+                 bi.asString(ServerBuildInfo.StringRepresentation.VERSION_FULL),
+                 bi.minecraftVersionId()
+             )

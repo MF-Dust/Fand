@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 14:59:32 +0800
+Subject: [PATCH] Update Leaves
+
+
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 989bd5a0248b4fec9efbfc45b67871ede9a745bc..c67165dbd396c3f58a37b23b4528d1029ebad88f 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -133,7 +133,7 @@ public final class Bukkit {
+      */
+     @NotNull
+     public static String getName() {
+-        return server.getName();
++        return "Fand";
+     }
+ 
+     /**
