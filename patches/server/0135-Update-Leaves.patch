@@ -1,0 +1,229 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 14:47:26 +0800
+Subject: [PATCH] Update Leaves
+
+
+diff --git a/src/main/java/com/fandmc/fand/ConfigVerifyImpl.java b/src/main/java/com/fandmc/fand/ConfigVerifyImpl.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..08488ac306957b1e729e8d7c6cd2a71f9ec34216
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/ConfigVerifyImpl.java
+@@ -0,0 +1,117 @@
++package com.fandmc.fand;
++
++import org.jetbrains.annotations.NotNull;
++import com.fandmc.fand.config.ConfigVerify;
++import java.lang.reflect.ParameterizedType;
++import java.lang.reflect.Type;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Locale;
++
++public abstract class ConfigVerifyImpl<E> implements ConfigVerify<E> {
++
++    private Class<E> fieldClass;
++
++    @SuppressWarnings("unchecked")
++    public ConfigVerifyImpl() {
++        Type superClass = getClass().getGenericSuperclass();
++        if (superClass instanceof ParameterizedType) {
++            Type[] actualTypeArguments = ((ParameterizedType) superClass).getActualTypeArguments();
++            if (actualTypeArguments[0] instanceof Class) {
++                this.fieldClass = (Class<E>) actualTypeArguments[0];
++            }
++        }
++    }
++
++    @Override
++    public Class<E> getFieldClass() {
++        return fieldClass;
++    }
++
++    public static class BooleanConfigVerify extends ConfigVerifyImpl<Boolean> {
++
++        @Override
++        public Boolean convert(String value) throws IllegalArgumentException {
++            return Boolean.parseBoolean(value);
++        }
++
++        @Override
++        public List<String> valueSuggest() {
++            return List.of("false", "true");
++        }
++    }
++
++    public static class IntConfigVerify extends ConfigVerifyImpl<Integer> {
++        @Override
++        public Integer convert(String value) throws IllegalArgumentException {
++            return Integer.parseInt(value);
++        }
++    }
++
++    public static class StringConfigVerify extends ConfigVerifyImpl<String> {
++        @Override
++        public String convert(String value) throws IllegalArgumentException {
++            return value;
++        }
++    }
++
++    public static class DoubleConfigVerify extends ConfigVerifyImpl<Double> {
++        @Override
++        public Double convert(String value) throws IllegalArgumentException {
++            return Double.parseDouble(value);
++        }
++    }
++
++    public abstract static class ListConfigVerify<E> extends ConfigVerifyImpl<List<E>> {
++        public static class STRING extends ListConfigVerify<String> {
++        }
++
++        @Override
++        public List<E> convert(String value) throws IllegalArgumentException {
++            throw new IllegalArgumentException("not support"); // TODO
++        }
++    }
++
++    public abstract static class EnumConfigVerify<E extends Enum<E>> extends ConfigVerifyImpl<E> {
++
++        private final Class<E> enumClass;
++        private final List<String> enumValues;
++
++        @SuppressWarnings({"unchecked", "unused"})
++        public EnumConfigVerify() {
++            Type genericSuperclass = getClass().getGenericSuperclass();
++            Type[] typeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
++            this.enumClass = (Class<E>) typeArguments[0];
++            this.enumValues = new ArrayList<>() {{
++                for (E e : enumClass.getEnumConstants()) {
++                    add(e.name().toLowerCase(Locale.ROOT));
++                }
++            }};
++        }
++
++        @Override
++        public E convert(@NotNull String value) throws IllegalArgumentException {
++            return Enum.valueOf(enumClass, value.toUpperCase(Locale.ROOT));
++        }
++
++        @Override
++        public E loadConvert(@NotNull Object value) throws IllegalArgumentException {
++            return this.convert(value.toString());
++        }
++
++        @Override
++        public Object saveConvert(@NotNull E value) {
++            return value.toString().toUpperCase(Locale.ROOT);
++        }
++
++        @Override
++        public List<String> valueSuggest() {
++            return enumValues;
++        }
++
++        @Override
++        public Class<E> getFieldClass() {
++            return enumClass;
++        }
++    }
++}
+diff --git a/src/main/java/com/fandmc/fand/FandConfig.java b/src/main/java/com/fandmc/fand/FandConfig.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..947317c90ab7bf09e8818e46ac786f9e0483b90b
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/FandConfig.java
+@@ -0,0 +1,6 @@
++package com.fandmc.fand;
++
++public class FandConfig {
++    @GlobalConfig(name = "server-mod-name", category = "misc", verify = ConfigVerifyImpl.StringConfigVerify.class)
++    public static String serverModName = "Fand";
++}
+diff --git a/src/main/java/com/fandmc/fand/GlobalConfig.java b/src/main/java/com/fandmc/fand/GlobalConfig.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..23ad4b039e2017ef1b09d2bd6a67ba411f30293d
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/GlobalConfig.java
+@@ -0,0 +1,21 @@
++package com.fandmc.fand;
++
++import com.fandmc.fand.config.ConfigVerify;
++
++import java.lang.annotation.ElementType;
++import java.lang.annotation.Retention;
++import java.lang.annotation.RetentionPolicy;
++import java.lang.annotation.Target;
++
++@Target(ElementType.FIELD)
++@Retention(RetentionPolicy.RUNTIME)
++public @interface GlobalConfig {
++
++    String name();
++
++    String[] category();
++
++    boolean lock() default false;
++
++    Class<? extends ConfigVerify<?>> verify() default ConfigVerifyImpl.BooleanConfigVerify.class;
++}
+diff --git a/src/main/java/com/fandmc/fand/config/ConfigConvert.java b/src/main/java/com/fandmc/fand/config/ConfigConvert.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..9c2684c0284a606e0aca16ca9f0a86879bb445ff
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/config/ConfigConvert.java
+@@ -0,0 +1,20 @@
++package com.fandmc.fand.config;
++
++public interface ConfigConvert<E> {
++
++    E convert(String value) throws IllegalArgumentException;
++
++    default E loadConvert(Object value) throws IllegalArgumentException {
++        try {
++            return (E) value;
++        } catch (ClassCastException e) {
++            throw new IllegalArgumentException(e);
++        }
++    }
++
++    default Object saveConvert(E value) {
++        return value;
++    }
++
++    Class<E> getFieldClass();
++}
+diff --git a/src/main/java/com/fandmc/fand/config/ConfigVerify.java b/src/main/java/com/fandmc/fand/config/ConfigVerify.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..47e56859f73404c32d9c57b283202fb2d9e79b42
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/config/ConfigVerify.java
+@@ -0,0 +1,16 @@
++package com.fandmc.fand.config;
++
++import java.util.List;
++
++public interface ConfigVerify<E> extends ConfigConvert<E> {
++
++    default void check(E old, E value) throws IllegalArgumentException {
++    }
++
++    default List<String> valueSuggest() {
++        return List.of("<value>");
++    }
++
++    default void runAfterLoader(E value, boolean firstLoad) {
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index ca0badf478777d840ddf730e2684f76d9cc596a9..ee78ed7ee15a30f2ef788bf40070c3fd049b4748 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -1931,7 +1931,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+ 
+     @DontObfuscate
+     public String getServerModName() {
+-        return org.leavesmc.leaves.LeavesConfig.serverModName; // Leaves - Custom // Paper
++        return com.fandmc.fand.FandConfig.serverModName; // Fand - Custom // Paper
+     }
+ 
+     public SystemReport fillSystemReport(SystemReport details) {
