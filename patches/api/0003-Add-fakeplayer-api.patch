@@ -1,0 +1,856 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: violetc <58360096+s-yh-china@users.noreply.github.com>
+Date: Wed, 27 Jul 2022 15:30:34 +0800
+Subject: [PATCH] Add fakeplayer api
+
+
+diff --git a/.gitignore b/.gitignore
+index 97e78e27ee0eea2c8b24886eeb19164d552323fe..9764fa643039f215627c20a33ca70c9e36b2d599 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -38,3 +38,4 @@
+ # vs code
+ /.vscode
+ /.factorypath
++
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 4705c1d91e39fcc3c608b1f1a38a30d063ccf06e..30cebbf2e194c56450328a7dc04c92c81edce284 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -2906,6 +2906,17 @@ public final class Bukkit {
+     }
+     // Paper end - Folia region threading API
+ 
++    // Leaves start - Bot API
++    /**
++     * Returns a bot manager.
++     *
++     * @return Bot Manager
++     */
++    public static @NotNull org.leavesmc.leaves.entity.BotManager getBotManager() {
++        return server.getBotManager();
++    }
++    // Leaves end - Bot API
++
+     @NotNull
+     public static Server.Spigot spigot() {
+         return server.spigot();
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 594deedd08c3b3255fe6838471d945759f09a182..6fa638198f75458177af795f00250ce970591315 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -62,6 +62,7 @@ import org.jetbrains.annotations.ApiStatus;
+ import org.jetbrains.annotations.Contract;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.BotManager;
+ 
+ /**
+  * Represents a server implementation.
+@@ -2551,4 +2552,13 @@ public interface Server extends PluginMessageRecipient, net.kyori.adventure.audi
+      */
+     boolean isOwnedByCurrentRegion(@NotNull Entity entity);
+     // Paper end - Folia region threading API
++
++    // Leaves start - Bot API
++    /**
++     * Returns a bot manager.
++     *
++     * @return Bot Manager
++     */
++    @NotNull BotManager getBotManager();
++    // Leaves end - Bot API
+ }
+diff --git a/src/main/java/org/leavesmc/leaves/entity/Bot.java b/src/main/java/org/leavesmc/leaves/entity/Bot.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..922ca5b27bc0dd443d635646f37f879559cc0252
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/entity/Bot.java
+@@ -0,0 +1,51 @@
++package org.leavesmc.leaves.entity;
++
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.botaction.LeavesBotAction;
++
++import java.util.UUID;
++
++/**
++ * Represents a fakeplayer
++ */
++public interface Bot extends Player {
++
++    /**
++     * Gets the fakeplayer skin
++     *
++     * @return fakeplayer skin name
++     */
++    @Nullable
++    public String getSkinName();
++
++    /**
++     * Gets the fakeplayer name without prefix and suffix
++     *
++     * @return fakeplayer real name
++     */
++    @NotNull
++    public String getRealName();
++
++    @Nullable
++    public UUID getCreatePlayerUUID();
++
++    /**
++     * Sets the fakeplayer action with args.
++     *
++     * @param action action name
++     * @param player player who create this action
++     * @param args   passed action arguments
++     */
++    public boolean setBotAction(@NotNull String action, @NotNull Player player, @NotNull String[] args);
++
++    /**
++     * Sets the fakeplayer action with args.
++     *
++     * @param action leaves bot action
++     * @param player player who create this action
++     * @param args   passed action arguments
++     */
++    public boolean setBotAction(@NotNull LeavesBotAction action, @NotNull Player player, @NotNull String[] args);
++}
+diff --git a/src/main/java/org/leavesmc/leaves/entity/BotManager.java b/src/main/java/org/leavesmc/leaves/entity/BotManager.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ee6848b8990c516aa5c5490546dd16ae5c909740
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/entity/BotManager.java
+@@ -0,0 +1,124 @@
++package org.leavesmc.leaves.entity;
++
++import org.bukkit.Location;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.botaction.CustomBotAction;
++
++import java.util.Collection;
++import java.util.UUID;
++import java.util.function.Consumer;
++
++/**
++ * Simple fakeplayer manager
++ */
++public interface BotManager {
++
++    /**
++     * Gets a fakeplayer object by the given uuid.
++     *
++     * @param uuid the uuid to look up
++     * @return a fakeplayer if one was found, null otherwise
++     */
++    @Nullable
++    public Bot getBot(@NotNull UUID uuid);
++
++    /**
++     * Gets a fakeplayer object by the given name.
++     *
++     * @param name the name to look up
++     * @return a fakeplayer if one was found, null otherwise
++     */
++    @Nullable
++    public Bot getBot(@NotNull String name);
++
++    /**
++     * Creates a fakeplayer with given param.
++     * <p>
++     * prefix and suffix will not be added.
++     *
++     * @param name fakeplayer name
++     * @param realName fakeplayer real name
++     * @param skin fakeplayer skin arr
++     * @param skinName fakeplayer skin name
++     * @param location a location will create fakeplayer
++     * @return a fakeplayer if success, null otherwise
++     */
++    @Deprecated(since = "1.21")
++    @Nullable
++    public Bot createBot(@NotNull String name, @NotNull String realName, @Nullable String[] skin, @Nullable String skinName, @NotNull Location location);
++
++    /**
++     * Creates a fakeplayer with given param.
++     * <p>
++     * prefix and suffix will not be added.
++     *
++     * @param name fakeplayer name
++     * @param realName fakeplayer real name
++     * @param skin fakeplayer skin arr
++     * @param skinName fakeplayer skin name
++     * @param location a location will create fakeplayer
++     * @param consumer a consumer after create fakeplayer success
++     * @return a fakeplayer if you support skin arr and the creation is success, null otherwise
++     */
++    @Nullable
++    public Bot createBot(@NotNull String name, @NotNull String realName, @NotNull String[] skin, @Nullable String skinName, @NotNull Location location, @Nullable Consumer<Bot> consumer);
++
++    /**
++     * Creates a fakeplayer with given param.
++     *
++     * @param name fakeplayer name
++     * @param skinName fakeplayer skin name
++     * @param location a location will create fakeplayer
++     * @param consumer a consumer after create fakeplayer success
++     */
++    public void createBot(@NotNull String name, @Nullable String skinName, @NotNull Location location, @Nullable Consumer<Bot> consumer);
++
++    /**
++     * Removes a fakeplayer object by the given name.
++     *
++     * @param name the name to look up
++     */
++    public void removeBot(@NotNull String name);
++
++    /**
++     * Removes a fakeplayer object by the given uuid.
++     *
++     * @param uuid the uuid to look up
++     */
++    public void removeBot(@NotNull UUID uuid);
++
++    /**
++     * Removes all fakeplayers.
++     */
++    public void removeAllBots();
++
++    /**
++     * Save fakeplayers data if resident-fakeplayer is true, or remove all fakeplayer.
++     */
++    public void saveOrRemoveAllBots();
++
++    /**
++     * Gets a view of all currently logged in fakeplayers. This view is a reused object, making some operations like Collection.size() zero-allocation.
++     *
++     * @return a view of fakeplayers.
++     */
++    public Collection<Bot> getBots();
++
++    /**
++     * Register a custom bot action.
++     *
++     * @param name action name
++     * @param action action executor
++     * @return true if success, or false
++     */
++    public boolean registerCustomBotAction(String name, CustomBotAction action);
++
++    /**
++     * Unregister a custom bot action.
++     *
++     * @param name action name
++     * @return true if success, or false
++     */
++    public boolean unregisterCustomBotAction(String name);
++}
+diff --git a/src/main/java/org/leavesmc/leaves/entity/botaction/CustomBotAction.java b/src/main/java/org/leavesmc/leaves/entity/botaction/CustomBotAction.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b1648013d5f03d064c0719c231981082ab563be
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/entity/botaction/CustomBotAction.java
+@@ -0,0 +1,52 @@
++package org.leavesmc.leaves.entity.botaction;
++
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.Bot;
++
++import java.util.List;
++
++/**
++ * Represents a class which contains methods for a custom bot action
++ */
++public interface CustomBotAction {
++
++    /**
++     * Executes the action, returning its success.
++     *
++     * @param bot bot of the action
++     * @return true if once action finish, otherwise false
++     */
++    public boolean doTick(Bot bot);
++
++    /**
++     *  Created a new action instance.
++     *
++     * @param player player who create this action
++     * @param args passed action arguments
++     * @return a new action instance with given args
++     */
++    public @Nullable CustomBotAction getNew(Player player, String[] args);
++
++    /**
++     * Requests a list of possible completions for a action argument.
++     *
++     * @return A List of a List of possible completions for the argument.
++     */
++    public @NotNull List<List<String>> getTabComplete();
++
++    /**
++     * Return a ticks to wait between {@link CustomBotAction#doTick(Bot)}
++     *
++     * @return the ticks to wait between runs
++     */
++    public int getTickDelay();
++
++    /**
++     * Return a number of times {@link CustomBotAction#doTick(Bot)} can return true
++     *
++     * @return the number of times an action can be executed
++     */
++    public int getNumber();
++}
+diff --git a/src/main/java/org/leavesmc/leaves/entity/botaction/LeavesBotAction.java b/src/main/java/org/leavesmc/leaves/entity/botaction/LeavesBotAction.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a6fdf8c77318172621494af94a0efb2bd34ca651
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/entity/botaction/LeavesBotAction.java
+@@ -0,0 +1,36 @@
++package org.leavesmc.leaves.entity.botaction;
++
++/**
++ * A Leaves bot action enum
++ */
++public enum LeavesBotAction {
++    ATTACK("attack"),
++    @Deprecated(since = "1.21.1", forRemoval = true)
++    ATTACK_SELF("attack_self"),
++    BREAK("break"),
++    DROP("drop"),
++    FISH("fish"),
++    JUMP("jump"),
++    LAY("lay"),
++    LOOK("look"),
++    ROTATE("rotate"),
++    SNEAK("sneak"),
++    STOP("stop"),
++    SWIM("swim"),
++    USE("use"),
++    USE_ON("use_on"),
++    USE_TO("use_to"),
++    USE_OFFHAND("use_offhand"),
++    USE_ON_OFFHAND("use_on_offhand"),
++    USE_TO_OFFHAND("use_to_offhand");
++
++    private final String name;
++
++    private LeavesBotAction(String name) {
++        this.name = name;
++    }
++
++    public String getName() {
++        return name;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotActionEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotActionEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..91ea5540387b7d7e1be5b6368a2f02b3b784614a
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotActionEvent.java
+@@ -0,0 +1,49 @@
++package org.leavesmc.leaves.event.bot;
++
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++import org.leavesmc.leaves.entity.Bot;
++
++public class BotActionEvent extends BotEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++
++    private final String actionName;
++    private final String[] actionArgs;
++    private boolean cancel = false;
++
++    public BotActionEvent(@NotNull Bot who, String actionName, String[] actionArgs) {
++        super(who);
++        this.actionArgs = actionArgs;
++        this.actionName = actionName;
++    }
++
++    @NotNull
++    public String[] getActionArgs() {
++        return actionArgs;
++    }
++
++    @NotNull
++    public String getActionName() {
++        return actionName;
++    }
++
++    @Override
++    public @NotNull HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @Override
++    public boolean isCancelled() {
++        return cancel;
++    }
++
++    @Override
++    public void setCancelled(boolean cancel) {
++        this.cancel = cancel;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotConfigModifyEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotConfigModifyEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5e55759fd3d7891e8e1d5d6a306dc8144d366469
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotConfigModifyEvent.java
+@@ -0,0 +1,49 @@
++package org.leavesmc.leaves.event.bot;
++
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++import org.leavesmc.leaves.entity.Bot;
++
++public class BotConfigModifyEvent extends BotEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++
++    private final String configName;
++    private final String configValue;
++    private boolean cancel;
++
++    public BotConfigModifyEvent(@NotNull Bot who, String configName, String configValue) {
++        super(who);
++        this.configName = configName;
++        this.configValue = configValue;
++    }
++
++    @NotNull
++    public String getConfigName() {
++        return configName;
++    }
++
++    @NotNull
++    public String getConfigValue() {
++        return configValue;
++    }
++
++    @Override
++    public @NotNull HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @Override
++    public boolean isCancelled() {
++        return cancel;
++    }
++
++    @Override
++    public void setCancelled(boolean cancel) {
++        this.cancel = cancel;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotCreateEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotCreateEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..be510d565c5942efea3423190b06c01873a7abd2
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotCreateEvent.java
+@@ -0,0 +1,118 @@
++package org.leavesmc.leaves.event.bot;
++
++import org.bukkit.Location;
++import org.bukkit.command.CommandSender;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Optional;
++
++/**
++ * Call when a fakeplayer creates a server
++ */
++public class BotCreateEvent extends Event implements Cancellable {
++    public enum CreateReason {
++        COMMAND,
++        PLUGIN,
++        INTERNAL
++    }
++    private static final HandlerList handlers = new HandlerList();
++
++    private final String bot;
++    private final String skin;
++    private final CreateReason reason;
++    private final Optional<CommandSender> creator;
++    private Location createLocation;
++    private boolean cancel = false;
++
++    public BotCreateEvent(@NotNull final String who, @NotNull final String skin, @NotNull final Location createLocation, @NotNull CreateReason reason, @Nullable CommandSender creator) {
++        this.bot = who;
++        this.skin = skin;
++        this.createLocation = createLocation;
++        this.reason = reason;
++        this.creator = Optional.ofNullable(creator);
++    }
++
++    /**
++     * Gets the fakeplayer name
++     *
++     * @return fakeplayer name
++     */
++    public String getBot() {
++        return bot;
++    }
++
++    /**
++     * Gets the location to create the fakeplayer
++     *
++     * @return Location to create the fakeplayer
++     */
++    @NotNull
++    public Location getCreateLocation() {
++        return createLocation;
++    }
++
++    /**
++     * Sets the location to create the fakeplayer
++     *
++     * @param createLocation location to create the fakeplayer
++     */
++    public void setCreateLocation(@NotNull Location createLocation) {
++        this.createLocation = createLocation;
++    }
++
++    /**
++     * Gets the fakeplayer skin
++     *
++     * @return fakeplayer skin name
++     */
++    @Nullable
++    public String getSkin() {
++        return skin;
++    }
++
++    /**
++     * Gets the create reason of the bot
++     *
++     * @return create reason
++     */
++    @NotNull
++    public CreateReason getReason() {
++        return reason;
++    }
++
++    /**
++     * Gets the creator of the bot
++     * if the create reason is not COMMAND, the creator might be Optional.empty()
++     *
++     * @return An optional of creator
++     */
++    @NotNull
++    public Optional<CommandSender> getCreator() {
++        return creator;
++    }
++
++    @Override
++    public boolean isCancelled() {
++        return cancel;
++    }
++
++    @Override
++    public void setCancelled(boolean cancel) {
++        this.cancel = cancel;
++    }
++
++    @Override
++    @NotNull
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @NotNull
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad358081f1e1da4075243d7ca0a01c1f7b00631b
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotEvent.java
+@@ -0,0 +1,31 @@
++package org.leavesmc.leaves.event.bot;
++
++import org.bukkit.event.Event;
++import org.jetbrains.annotations.NotNull;
++import org.leavesmc.leaves.entity.Bot;
++
++/**
++ * Represents a fakeplayer related event
++ */
++public abstract class BotEvent extends Event {
++    protected Bot bot;
++
++    public BotEvent(@NotNull final Bot who) {
++        bot = who;
++    }
++
++    public BotEvent(@NotNull final Bot who, boolean async) { // Paper - public
++        super(async);
++        bot = who;
++    }
++
++    /**
++     * Returns the fakeplayer involved in this event
++     *
++     * @return Fakeplayer who is involved in this event
++     */
++    @NotNull
++    public final Bot getBot() {
++        return bot;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotInventoryOpenEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotInventoryOpenEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a369b468d4793b36dd0944a1368a70e07b9fc10f
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotInventoryOpenEvent.java
+@@ -0,0 +1,46 @@
++package org.leavesmc.leaves.event.bot;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.Bot;
++
++public class BotInventoryOpenEvent extends BotEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++
++    private final Player player;
++    private boolean cancel = false;
++
++    public BotInventoryOpenEvent(@NotNull Bot who, @Nullable Player player) {
++        super(who);
++        this.player = player;
++    }
++
++    @Override
++    public boolean isCancelled() {
++        return cancel;
++    }
++
++    @Override
++    public void setCancelled(boolean cancel) {
++        this.cancel = cancel;
++    }
++
++    @Nullable
++    public Player getOpenPlayer() {
++        return player;
++    }
++
++
++    @Override
++    public @NotNull HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @NotNull
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotJoinEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotJoinEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..07f6d81c4cd897230bbd6712dac09b8995431104
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotJoinEvent.java
+@@ -0,0 +1,66 @@
++package org.leavesmc.leaves.event.bot;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.Bot;
++
++/**
++ * Called when a fakeplayer joins a server
++ */
++public class BotJoinEvent extends BotEvent {
++    private static final HandlerList handlers = new HandlerList();
++
++    private Component joinMessage;
++
++    public BotJoinEvent(@NotNull final Bot who, @Nullable final Component joinMessage) {
++        super(who);
++        this.joinMessage = joinMessage;
++    }
++
++    public BotJoinEvent(@NotNull final Bot who, @Nullable final String joinMessage) {
++        super(who);
++        this.joinMessage = joinMessage != null ? LegacyComponentSerializer.legacySection().deserialize(joinMessage) : null;
++    }
++
++    public void joinMessage(@Nullable final Component joinMessage) {
++        this.joinMessage = joinMessage;
++    }
++
++    @Nullable
++    public Component joinMessage() {
++        return joinMessage;
++    }
++
++    /**
++     * Gets the join message to send to all online players
++     *
++     * @return string join message. Can be null
++     */
++    @Nullable
++    public String getJoinMessage() {
++        return this.joinMessage == null ? null : LegacyComponentSerializer.legacySection().serialize(this.joinMessage);
++    }
++
++    /**
++     * Sets the join message to send to all online players
++     *
++     * @param joinMessage join message. If null, no message will be sent
++     */
++    public void setJoinMessage(@Nullable String joinMessage) {
++        this.joinMessage = joinMessage != null ? LegacyComponentSerializer.legacySection().deserialize(joinMessage) : null;
++    }
++
++    @Override
++    @NotNull
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @NotNull
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/leavesmc/leaves/event/bot/BotRemoveEvent.java b/src/main/java/org/leavesmc/leaves/event/bot/BotRemoveEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7af990a5ee020dfdbec2efc6aecf6393a4223730
+--- /dev/null
++++ b/src/main/java/org/leavesmc/leaves/event/bot/BotRemoveEvent.java
+@@ -0,0 +1,105 @@
++package org.leavesmc.leaves.event.bot;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
++import org.bukkit.command.CommandSender;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.leavesmc.leaves.entity.Bot;
++
++import java.util.Optional;
++
++/**
++ * Call when a fakeplayer creates a server
++ */
++public class BotRemoveEvent extends BotEvent implements Cancellable {
++    public enum RemoveReason {
++        COMMAND,
++        PLUGIN,
++        DEATH,
++        INTERNAL
++    }
++
++    private static final HandlerList handlers = new HandlerList();
++
++    private final RemoveReason reason;
++    private final Optional<CommandSender> remover;
++    private Component removeMessage;
++    private boolean cancel = false;
++
++    public BotRemoveEvent(@NotNull final Bot who, @NotNull RemoveReason reason) {
++        this(who, reason, null);
++    }
++
++    public BotRemoveEvent(@NotNull final Bot who, @NotNull RemoveReason reason, @Nullable CommandSender remover) {
++        this(who, reason, remover, null);
++    }
++
++    public BotRemoveEvent(@NotNull final Bot who, @NotNull RemoveReason reason, @Nullable CommandSender remover, @Nullable Component removeMessage) {
++        super(who);
++        this.reason = reason;
++        this.remover = Optional.ofNullable(remover);
++        this.removeMessage = removeMessage;
++    }
++
++    /**
++     * Gets the remove reason of the bot
++     *
++     * @return remove reason
++     */
++    @NotNull
++    public RemoveReason getReason() {
++        return reason;
++    }
++
++    /**
++     * Gets the remover of the bot
++     * if the remove reason is not COMMAND, the creator might be Optional.empty()
++     *
++     * @return An optional of remover
++     */
++    @NotNull
++    public Optional<CommandSender> getRemover() {
++        return remover;
++    }
++
++    public Component removeMessage() {
++        return removeMessage;
++    }
++
++    public void removeMessage(Component removeMessage) {
++        this.removeMessage = removeMessage;
++    }
++
++    @Nullable
++    public String getRemoveMessage() {
++        return this.removeMessage == null ? null : LegacyComponentSerializer.legacySection().serialize(this.removeMessage);
++    }
++
++    public void setRemoveMessage(@Nullable String removeMessage) {
++        this.removeMessage = removeMessage != null ? LegacyComponentSerializer.legacySection().deserialize(removeMessage) : null;
++    }
++
++    @Override
++    public boolean isCancelled() {
++        return cancel;
++    }
++
++    @Override
++    public void setCancelled(boolean cancel) {
++        this.cancel = cancel;
++    }
++
++    @Override
++    @NotNull
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    @NotNull
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
