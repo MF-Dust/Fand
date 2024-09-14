@@ -1,0 +1,190 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sat, 14 Sep 2024 17:41:24 +0800
+Subject: [PATCH] Update Fand
+
+
+diff --git a/src/main/java/com/fandmc/fand/FandConfig.java b/src/main/java/com/fandmc/fand/FandConfig.java
+index 32cd98d0fcf12c29d08ff40f167be5672999016c..34af0e1671aad32d269f16024e56814ffd172f38 100644
+--- a/src/main/java/com/fandmc/fand/FandConfig.java
++++ b/src/main/java/com/fandmc/fand/FandConfig.java
+@@ -1,5 +1,8 @@
+ package com.fandmc.fand;
+ 
++import com.fandmc.fand.util.ConfigVerifyImpl;
++import com.fandmc.fand.util.GlobalConfig;
++
+ public class FandConfig {
+     @GlobalConfig(name = "server-mod-name", category = "misc", verify = ConfigVerifyImpl.StringConfigVerify.class)
+     public static String serverModName = "Fand";
+diff --git a/src/main/java/com/fandmc/fand/util/Color.java b/src/main/java/com/fandmc/fand/util/Color.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b43df098b86ad1b8f875937f96401fcef210dd3c
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/util/Color.java
+@@ -0,0 +1,106 @@
++package com.fandmc.fand.util;
++
++import java.util.HashMap;
++import java.util.Map;
++
++public class Color {
++    private int red;
++    private int green;
++    private int blue;
++
++    // 预定义的颜色
++    public static final Color RED = new Color(255, 0, 0);
++    public static final Color GREEN = new Color(0, 255, 0);
++    public static final Color BLUE = new Color(0, 0, 255);
++    public static final Color WHITE = new Color(255, 255, 255);
++    public static final Color BLACK = new Color(0, 0, 0);
++    public static final Color YELLOW = new Color(255, 255, 0);
++    public static final Color CYAN = new Color(0, 255, 255);
++    public static final Color MAGENTA = new Color(255, 0, 255);
++    public static final Color ORANGE = new Color(255, 165, 0);
++    public static final Color PINK = new Color(255, 192, 203);
++    public static final Color PURPLE = new Color(128, 0, 128);
++    public static final Color GRAY = new Color(128, 128, 128);
++
++    // Minecraft颜色代码
++    private static final Map<Character, Color> MINECRAFT_COLOR_MAP = new HashMap<>();
++
++    static {
++        MINECRAFT_COLOR_MAP.put('0', new Color(0, 0, 0));      // 黑色
++        MINECRAFT_COLOR_MAP.put('1', new Color(0, 0, 170));    // 深蓝色
++        MINECRAFT_COLOR_MAP.put('2', new Color(0, 170, 0));    // 深绿色
++        MINECRAFT_COLOR_MAP.put('3', new Color(0, 170, 170));  // 深青色
++        MINECRAFT_COLOR_MAP.put('4', new Color(170, 0, 0));    // 深红色
++        MINECRAFT_COLOR_MAP.put('5', new Color(170, 0, 170));  // 紫色
++        MINECRAFT_COLOR_MAP.put('6', new Color(255, 170, 0));  // 金色
++        MINECRAFT_COLOR_MAP.put('7', new Color(170, 170, 170));// 浅灰色
++        MINECRAFT_COLOR_MAP.put('8', new Color(85, 85, 85));   // 深灰色
++        MINECRAFT_COLOR_MAP.put('9', new Color(85, 85, 255));  // 蓝色
++        MINECRAFT_COLOR_MAP.put('a', new Color(85, 255, 85));  // 绿色
++        MINECRAFT_COLOR_MAP.put('b', new Color(85, 255, 255)); // 青色
++        MINECRAFT_COLOR_MAP.put('c', new Color(255, 85, 85));  // 红色
++        MINECRAFT_COLOR_MAP.put('d', new Color(255, 85, 255)); // 粉色
++        MINECRAFT_COLOR_MAP.put('e', new Color(255, 255, 85)); // 黄色
++        MINECRAFT_COLOR_MAP.put('f', new Color(255, 255, 255));// 白色
++    }
++
++    // Constructor
++    public Color(int red, int green, int blue) {
++        this.red = red;
++        this.green = green;
++        this.blue = blue;
++    }
++
++    // 获取 RGB 值
++    public int getRed() {
++        return red;
++    }
++
++    public int getGreen() {
++        return green;
++    }
++
++    public int getBlue() {
++        return blue;
++    }
++
++    // 获取 HEX 格式的颜色
++    public String toHex() {
++        return String.format("#%02x%02x%02x", red, green, blue);
++    }
++
++    // 支持0x前缀的十六进制颜色转换
++    public static Color fromHex(String hex) {
++        hex = hex.replace("#", "").replace("0x", "");
++        if (hex.length() != 6) {
++            throw new IllegalArgumentException("Invalid hex color: " + hex);
++        }
++        int r = Integer.parseInt(hex.substring(0, 2), 16);
++        int g = Integer.parseInt(hex.substring(2, 4), 16);
++        int b = Integer.parseInt(hex.substring(4, 6), 16);
++        return new Color(r, g, b);
++    }
++
++    // 从 Minecraft 颜色代码生成颜色
++    public static Color fromMinecraftColorCode(char code) {
++        if (!MINECRAFT_COLOR_MAP.containsKey(code)) {
++            throw new IllegalArgumentException("Invalid Minecraft color code: " + code);
++        }
++        return MINECRAFT_COLOR_MAP.get(code);
++    }
++
++    // 重写 toString() 以便显示颜色信息
++    @Override
++    public String toString() {
++        return "Color{" + "red=" + red + ", green=" + green + ", blue=" + blue + '}';
++    }
++
++    // 比较颜色相等
++    @Override
++    public boolean equals(Object obj) {
++        if (this == obj) return true;
++        if (obj == null || getClass() != obj.getClass()) return false;
++        Color color = (Color) obj;
++        return red == color.red && green == color.green && blue == color.blue;
++    }
++}
+diff --git a/src/main/java/com/fandmc/fand/ConfigVerifyImpl.java b/src/main/java/com/fandmc/fand/util/ConfigVerifyImpl.java
+similarity index 97%
+rename from src/main/java/com/fandmc/fand/ConfigVerifyImpl.java
+rename to src/main/java/com/fandmc/fand/util/ConfigVerifyImpl.java
+index 08488ac306957b1e729e8d7c6cd2a71f9ec34216..df0db400df706117baf2fb6513ed69e427dd84b6 100644
+--- a/src/main/java/com/fandmc/fand/ConfigVerifyImpl.java
++++ b/src/main/java/com/fandmc/fand/util/ConfigVerifyImpl.java
+@@ -1,7 +1,7 @@
+-package com.fandmc.fand;
++package com.fandmc.fand.util;
+ 
+ import org.jetbrains.annotations.NotNull;
+-import com.fandmc.fand.config.ConfigVerify;
++import com.fandmc.fand.util.config.ConfigVerify;
+ import java.lang.reflect.ParameterizedType;
+ import java.lang.reflect.Type;
+ import java.util.ArrayList;
+diff --git a/src/main/java/com/fandmc/fand/GlobalConfig.java b/src/main/java/com/fandmc/fand/util/GlobalConfig.java
+similarity index 84%
+rename from src/main/java/com/fandmc/fand/GlobalConfig.java
+rename to src/main/java/com/fandmc/fand/util/GlobalConfig.java
+index 23ad4b039e2017ef1b09d2bd6a67ba411f30293d..f9f32aff8dd7a001e3a96fdd5fe7efd478307a9d 100644
+--- a/src/main/java/com/fandmc/fand/GlobalConfig.java
++++ b/src/main/java/com/fandmc/fand/util/GlobalConfig.java
+@@ -1,6 +1,6 @@
+-package com.fandmc.fand;
++package com.fandmc.fand.util;
+ 
+-import com.fandmc.fand.config.ConfigVerify;
++import com.fandmc.fand.util.config.ConfigVerify;
+ 
+ import java.lang.annotation.ElementType;
+ import java.lang.annotation.Retention;
+diff --git a/src/main/java/com/fandmc/fand/config/ConfigConvert.java b/src/main/java/com/fandmc/fand/util/config/ConfigConvert.java
+similarity index 92%
+rename from src/main/java/com/fandmc/fand/config/ConfigConvert.java
+rename to src/main/java/com/fandmc/fand/util/config/ConfigConvert.java
+index 9c2684c0284a606e0aca16ca9f0a86879bb445ff..17e88cb675550c53fb7e88511fc1577116686b65 100644
+--- a/src/main/java/com/fandmc/fand/config/ConfigConvert.java
++++ b/src/main/java/com/fandmc/fand/util/config/ConfigConvert.java
+@@ -1,4 +1,4 @@
+-package com.fandmc.fand.config;
++package com.fandmc.fand.util.config;
+ 
+ public interface ConfigConvert<E> {
+ 
+diff --git a/src/main/java/com/fandmc/fand/config/ConfigVerify.java b/src/main/java/com/fandmc/fand/util/config/ConfigVerify.java
+similarity index 89%
+rename from src/main/java/com/fandmc/fand/config/ConfigVerify.java
+rename to src/main/java/com/fandmc/fand/util/config/ConfigVerify.java
+index 47e56859f73404c32d9c57b283202fb2d9e79b42..1990a1ce4da509e9e2514ac8a301622ef109495b 100644
+--- a/src/main/java/com/fandmc/fand/config/ConfigVerify.java
++++ b/src/main/java/com/fandmc/fand/util/config/ConfigVerify.java
+@@ -1,4 +1,4 @@
+-package com.fandmc.fand.config;
++package com.fandmc.fand.util.config;
+ 
+ import java.util.List;
+ 
