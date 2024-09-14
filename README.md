@@ -9,7 +9,7 @@ Fand
 
 > Fork of [Paper](https://github.com/PaperMC/Paper) aims at repairing broken vanilla properties.
 
-> You can see what we modify and fix at [here](https://docs.Fandmc.top)
+> You can see what we modify and fix at [here](https://docs.fandmc.cn)
 
 ## How To (Server Admins)
 Fand use the same Fandclip(paperclip fork) jar system that Paper uses.
@@ -18,14 +18,14 @@ You can download the latest build (1.21.x) of Fand by going [here](https://githu
 
 You can also [build it yourself](#building).
 
-You can visit our [documentation](https://docs.Fandmc.top) for more information.
+You can visit our [documentation](https://docs.fandmc.cn) for more information.
 
 ## How To (Plugin developers)
 Fand-API:
 ```kotlin
 maven {
     name = "Fandmc-repo"
-    url = "https://repo.Fandmc.top/snapshots/"
+    url = "https://repo.fandmc.cn/snapshots/"
 }
 
 dependencies {
