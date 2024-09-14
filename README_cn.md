@@ -4,7 +4,7 @@ Fand
 [![Fand CI](https://github.com/FandMC/Fand/actions/workflows/Fand.yml/badge.svg)](https://github.com/FandMC/Fand/actions/workflows/Fand.yml)
 [![Fand Download](https://img.shields.io/github/downloads/FandMC/Fand/total?color=0&logo=github)](https://github.com/FandMC/Fand/releases/latest)
 [![Discord](https://badgen.net/discord/online-members/5hgtU72w33?icon=discord&label=Discord&list=what)](https://discord.gg/5hgtU72w33)
-[![QQ](https://img.shields.io/badge/QQ_Unofficial-815857713-blue)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=nisbmnCFeEJCcYWBQ10th4Fu99XWklH4&authKey=8VlUxSdrFCIwmIpxFQIGR8%2BXvIQ2II%2Bx2JfxuQ8amr9UKgINh%2BdXjudQfc%2FIeTO5&noverify=0&group_code=815857713)
+[![QQ](https://img.shields.io/badge/QQ_Unofficial-495796642-blue)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=cgotyELe3jab6rKnUM5DuWWiaNakOIzZ&authKey=L8yT48eCSzqdtJZtE2%2F7qK8G3xnqs2O5u8zAOu56YLqSLccSo%2FOcjSGkXT8GjkQ1&noverify=0&group_code=495796642)
 
 [English](README.md) | **中文**
 
