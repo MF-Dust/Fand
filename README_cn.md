@@ -10,7 +10,7 @@ Fand
 
 > 一个致力于修复原版服务端被破坏特性的 [Paper](https://github.com/PaperMC/Paper) 分支
 
-> 你可以在 [这里](https://docs.Fandmc.top) 查看所有的修改和修复内容
+> 你可以在 [这里](https://docs.fandmc.cn) 查看所有的修改和修复内容
 
 ## 对于服务器管理员
 此分支使用与 Paper 一致的 Fandclip(paperclip的分支) 分发
@@ -19,14 +19,14 @@ Fand
 
 也可以通过 [此处](#自行构建) 的指南自行构建
 
-如果你想要获得更多信息，那么你可以访问我们的 [文档](https://docs.Fandmc.top)
+如果你想要获得更多信息，那么你可以访问我们的 [文档](https://docs.fandmc.cn)
 
 ## 对于插件开发者
 Fand-API:
 ```kotlin
 maven {
     name = "Fandmc-repo"
-    url = "https://repo.Fandmc.top/snapshots/"
+    url = "https://repo.fandmc.cn/snapshots/"
 }
 
 dependencies {
