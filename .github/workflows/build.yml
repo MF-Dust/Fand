@@ -30,6 +30,8 @@ jobs:
           git config --global user.name "FandMC"
       - name: Get Build Number
         run: bash scripts/GetBuildNumber.sh
+      - name: Perm Fix
+        run: chmod +x ./gradlew 
       - name: Apply Patches
         run: ./gradlew applyPatches
       - name: Create Fandclip Jar
