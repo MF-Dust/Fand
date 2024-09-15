@@ -1,0 +1,138 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FandMC <winme2002@outlook.com>
+Date: Sun, 15 Sep 2024 08:24:28 +0800
+Subject: [PATCH] Update #Leaves
+ #329(https://github.com/LeavesMC/Leaves/issues/329)
+
+
+diff --git a/src/main/java/com/fandmc/fand/util/ShulkerBoxUtils.java b/src/main/java/com/fandmc/fand/util/ShulkerBoxUtils.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..277b3a94ea29e0432e5a43b39ae31b8b45c26444
+--- /dev/null
++++ b/src/main/java/com/fandmc/fand/util/ShulkerBoxUtils.java
+@@ -0,0 +1,49 @@
++package com.fandmc.fand.util;
++
++import net.minecraft.core.component.DataComponents;
++import net.minecraft.world.item.BlockItem;
++import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.component.ItemContainerContents;
++import net.minecraft.world.level.block.ShulkerBoxBlock;
++import org.jetbrains.annotations.NotNull;
++import org.leavesmc.leaves.LeavesConfig;
++
++public class ShulkerBoxUtils {
++
++    /**
++     * 检查潜影盒是否为空
++     * @param stack 物品堆
++     * @return 如果潜影盒为空返回true
++     */
++    public static boolean shulkerBoxNoItem(@NotNull ItemStack stack) {
++        return stack.getComponents().getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY)
++                .stream()
++                .findAny()
++                .isEmpty();
++    }
++
++    /**
++     * 获取物品的最大堆叠数量。优先处理潜影盒的特殊堆叠逻辑。
++     * @param stack 物品堆
++     * @return 物品的最大堆叠数量
++     */
++    public static int getItemStackMaxCount(ItemStack stack) {
++        // 如果配置文件中的潜影盒堆叠数量大于1，且是一个空的潜影盒，返回自定义的堆叠数量
++        if (LeavesConfig.shulkerBoxStackSize > 1 && stack.getItem() instanceof BlockItem bi &&
++                bi.getBlock() instanceof ShulkerBoxBlock && shulkerBoxNoItem(stack)) {
++            return LeavesConfig.shulkerBoxStackSize;
++        }
++        // 否则返回物品的默认最大堆叠数
++        return stack.getMaxStackSize();
++    }
++
++    /**
++     * 检查物品是否可堆叠。
++     * @param itemStack 物品堆
++     * @return 如果物品可以堆叠返回true
++     */
++    public static boolean isStackable(ItemStack itemStack) {
++        // 物品的最大堆叠数大于1，并且物品不可损坏或者没有受损
++        return getItemStackMaxCount(itemStack) > 1 && (!itemStack.isDamageableItem() || !itemStack.isDamaged());
++    }
++}
+diff --git a/src/main/java/net/minecraft/world/entity/player/Inventory.java b/src/main/java/net/minecraft/world/entity/player/Inventory.java
+index 8631f3a5ce5aa24f195d5031dad6d289e4389314..b8fdabfc38bb245edea98961d823116b3bd2ecda 100644
+--- a/src/main/java/net/minecraft/world/entity/player/Inventory.java
++++ b/src/main/java/net/minecraft/world/entity/player/Inventory.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.world.entity.player;
+ 
++import com.fandmc.fand.util.ShulkerBoxUtils;
+ import com.google.common.collect.ImmutableList;
+ import java.util.Iterator;
+ import java.util.List;
+@@ -110,30 +111,55 @@ public class Inventory implements Container, Nameable {
+         return 9;
+     }
+ 
+-    private boolean hasRemainingSpaceForItem(ItemStack existingStack, ItemStack stack) {
+-        return !existingStack.isEmpty() && org.leavesmc.leaves.util.ShulkerBoxUtils.isStackable(existingStack) && existingStack.getCount() < org.leavesmc.leaves.util.ShulkerBoxUtils.getItemStackMaxCount(existingStack) && ItemStack.isSameItemSameComponents(existingStack, stack); // Paper - check if itemstack is stackable first
+-    }
++    private boolean hasRemainingSpaceForItem(ItemStack existingStack, ItemStack stack) {//Fand fix item forLeaves#329 (https://github.com/LeavesMC/Leaves/issues/329)
++        // 检查现有的物品堆是否为空，并且检查物品是否可以堆叠
++        return !existingStack.isEmpty()
++                && ShulkerBoxUtils.isStackable(existingStack) // 判断物品是否可以堆叠
++                && existingStack.getCount() < ShulkerBoxUtils.getItemStackMaxCount(existingStack) // 检查物品的堆叠数量是否未满
++                && ItemStack.isSameItemSameComponents(existingStack, stack); // 检查物品是否相同
++    }// Paper - check if itemstack is stackable first
+ 
+     // CraftBukkit start - Watch method above! :D
+     public int canHold(ItemStack itemstack) {
+-        int remains = itemstack.getCount();
++        int remains = itemstack.getCount(); // 获取物品的数量
++
++        // 遍历背包中的物品，检查是否有可以继续堆叠的物品
+         for (int i = 0; i < this.items.size(); ++i) {
+             ItemStack itemstack1 = this.getItem(i);
+-            if (itemstack1.isEmpty()) return itemstack.getCount();
+ 
++            // 如果物品堆为空，直接返回可存放的数量
++            if (itemstack1.isEmpty()) {
++                return itemstack.getCount();
++            }
++
++            // 检查是否可以堆叠
+             if (this.hasRemainingSpaceForItem(itemstack1, itemstack)) {
+-                remains -= (itemstack1.getMaxStackSize() < this.getMaxStackSize() ? itemstack1.getMaxStackSize() : this.getMaxStackSize()) - itemstack1.getCount();
++                int maxStackSize = Math.min(itemstack1.getMaxStackSize(), this.getMaxStackSize());
++                remains -= (maxStackSize - itemstack1.getCount());
++            }
++
++            // 如果剩余数量为0，表示物品可以完全堆叠
++            if (remains <= 0) {
++                return itemstack.getCount();
+             }
+-            if (remains <= 0) return itemstack.getCount();
+         }
++
++        // 检查副手的物品是否可以堆叠
+         ItemStack offhandItemStack = this.getItem(this.items.size() + this.armor.size());
+         if (this.hasRemainingSpaceForItem(offhandItemStack, itemstack)) {
+-            remains -= (offhandItemStack.getMaxStackSize() < this.getMaxStackSize() ? offhandItemStack.getMaxStackSize() : this.getMaxStackSize()) - offhandItemStack.getCount();
++            int maxStackSize = Math.min(offhandItemStack.getMaxStackSize(), this.getMaxStackSize());
++            remains -= (maxStackSize - offhandItemStack.getCount());
++        }
++
++        if (remains <= 0) {
++            return itemstack.getCount();
+         }
+-        if (remains <= 0) return itemstack.getCount();
+ 
++        // 返回可以拾取的数量，如果剩余数量为0则表示可以拾取
+         return itemstack.getCount() - remains;
+     }
++
++
+     // CraftBukkit end
+ 
+     public int getFreeSlot() {
